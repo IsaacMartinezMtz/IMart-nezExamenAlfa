@@ -1,0 +1,242 @@
+﻿
+@{
+    ViewData["Title"] = "GetAll";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="text-center">Alumnos</h2>
+
+<div class="text-center">
+    <button class="btn btn-success m-3" onclick="showModal()">Agregar</button>
+</div>
+<div class="col-md-12">
+
+    <table id="tablaEmpleado" class="table table-hover" border="1">
+        <thead class="table-dark">
+            <tr>
+                <th class="text-center" scope="col">Actualizar</th>
+                <th class="text-center" scope="col">Nombre</th>
+                <th class="text-center" scope="col">Genero</th>
+                <th class="text-center" scope="col">Edad</th>
+                <th class="text-center" scope="col">Eliminar</th>
+            </tr>
+
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" onclick="modalClose()">×</button>
+                <h4 class="modal-title">Formulario Empleado</h4>
+            </div>
+
+            <div class="modal-body">
+                <form>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input class="form-control" id="txtidAlumno" placeholder="Id" type="hidden" />
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input type="text" class="form-control" id="txtNombre" placeholder="Nombre" />
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input type="text" class="form-control" id="txtGenero" placeholder="Genero" />
+                    </div>
+                    <div class="form-group d-flex justify-content-center m-2">
+                        <input type="text" class="form-control" id="txtEdad" placeholder="Edad" />
+                    </div>
+                </form>
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success m-1" id="btnUpdate" onclick="guardar()">Guardar</button>
+                <button type="button" class="btn btn-danger m-1" data-dismiss="modal" onclick="modalClose()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () { //click
+        GetAll();
+       
+    });
+
+    function showModal() {
+        $('#modal').modal("show");
+    }
+
+    function modalClose() {
+        $('#modal').modal("hide");
+    }
+
+    function guardar() {
+        var idAlumno = $('#txtidAlumno').val()
+        if (idAlumno == 0) {
+            Add();
+        } else {
+            Update();
+        }
+    }
+
+    function limpiarModal() {
+        $('#txtidAlumno').val('');
+        $('#txtNombre').val('');
+        $('#txtGenero').val('');
+        $('#txtEdad').val('');
+       
+    }
+
+
+    function GetAll() {
+        $.ajax({
+
+            url: 'http://localhost:5067/api/Alumnos/GetAll',
+            type: 'GET',
+            success: function (result) {
+                console.log(result)
+                $('#tablaEmpleado tbody').empty();
+                $.each(result.objects, function(i, alumno) {
+                    
+                    var filas =
+                        '<tr>'
+                        + '<td class="text-center"> <button class="btn btn-warning" onclick="GetById(' + alumno.idUsuario + ')">Actualizar</button></td>'
+                        + "<td  id='id' class='text-center'>" + alumno.nombre + "</td>";
+                    if (alumno.genero) {
+                        filas += "<td class='text-center'>M</td>";
+                    }
+                    else {
+                        filas += "<td class='text-center'>F</td>";
+                    }
+                    filas += "<td class='text-center'>" + alumno.edad + "</td>"
+                        + '<td class="text-center"> <button class="btn btn-danger" onclick="Eliminar(' + alumno.idUsuario + ')">Eliminar</button></td>'
+                        + "</tr>";
+                    $("#tablaEmpleado tbody").append(filas);
+                });
+            },
+            error: function (result) {
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage); //es un error de JSON, y es porque puede venir vacio o null
+            }
+        });
+    };
+
+   
+
+    function Eliminar(idUsuario) {
+
+        if (confirm("¿Estas seguro de eliminar el Alumno?")) {
+            $.ajax({
+                type: 'DELETE',
+                url: 'http://localhost:5067/api/Alumnos/Delete/' + idUsuario,
+                success: function (result) {
+                    alert("Alumno eliminado Correctamente");
+                    $('#myModal').modal();
+                    GetAll();
+                },
+                error: function (result) {
+                    alert('Error en la consulta.' + result.responseJSON.ErrorMessage);
+                }
+            });
+
+        };
+    };
+
+    function GetById(idUsuario) {
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost:5067/api/Alumnos/GetById/' + idUsuario,
+            success: function (result) {
+                limpiarModal()
+
+                $('#txtidAlumno').val(result.object.idUsuario);
+                $('#txtNombre').val(result.object.nombre);
+                $('#txtGenero').val(result.object.genero);
+                $('#txtEdad').val(result.object.edad);
+                
+                $('#modal').modal('show');
+            },
+            error: function (result) {
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage);
+            }
+
+
+        });
+
+    }
+
+    function Update() {
+
+            var json = {
+                IdUsuario: $('#txtidAlumno').val(),
+                Nombre: $('#txtNombre').val(),
+                Genero: $('#txtGenero').val(),
+                Edad: $('#txtEdad').val()
+            }
+
+        $.ajax({
+            type: 'PUT',
+            url: 'http://localhost:5067/api/Alumnos/Update/' + json.IdUsuario,
+            datatype: 'json',
+            data: json,
+            success: function (result) {
+                alert("Empleado se ha actualizado correctamente");
+                modalClose();
+                limpiarModal();
+                GetAll();
+
+            },
+            error: function (result) {
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage);
+            }
+        });
+
+    };
+
+
+
+    function Add() {
+
+        var genero = $('#txtGenero').val() === 'Masculino' ? true : false;     
+        var json = {
+            
+            Nombre: $('#txtNombre').val(),
+            genero: $('#txtGenero').val(),
+            Edad: $('#txtEdad').val()
+           
+        }
+        $.ajax({
+
+            url: 'http://localhost:5067/api/Alumnos/Add',
+            type: 'POST',
+            data: JSON.stringify(json),
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {
+                alert("Alumno dado de alta correctamente");
+                modalClose();
+                limpiarModal();
+                GetAll();
+            },
+            error: function (jqXHR) {
+                // // console.log(result);
+                // alert('Error en la consulta.' + result.responseJSON.ErrorMessage); //es un error de JSON, y es porque puede venir vacio o null
+                var response = jqXHR.responseJSON;
+
+                if (response.errors) {
+                    if (response.errors.usuario) {
+                        alert('Error: ' + response.errors.usuario[0]);
+                    }
+                    if (response.errors['$.Genero']) {
+                        alert('Error: ' + response.errors['$.Genero'][0]);
+                    }
+                }
+            }
+        });
+
+    }
+</script>
+
+

@@ -1,0 +1,62 @@
+﻿
+@{
+    ViewData["Title"] = "GetAll";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="text-center">Alumnos</h2>
+
+<div class="text-center">
+    <button class="btn btn-success m-3" onclick="showModal()">Agregar</button>
+</div>
+<div class="col-md-12">
+
+    <table id="tablaEmpleado" class="table table-hover" border="1">
+        <thead class="table-dark">
+            <tr>
+                <th class="text-center" scope="col">IdAlumno</th>
+                <th class="text-center" scope="col">Nombre</th>
+                <th class="text-center" scope="col">IdBeca</th>
+                <th class="text-center" scope="col">Beca</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () { //click
+        GetAll();
+
+    });
+
+    function GetAll() {
+        $.ajax({
+
+            url: 'http://localhost:5067/api/Beca/GetAll',
+            type: 'GET',
+            success: function (result) {
+                console.log(result)
+                $('#tablaEmpleado tbody').empty();
+                $.each(result.objects, function (i, beca) {
+
+                    var filas =
+                        '<tr>'
+                        + "<td  id='id' class='text-center'>" + beca.usuario.idUsuario + "</td>"
+                        + "<td class='text-center'>" + beca.usuario.nombre + "</td>"
+                        + "<td class='text-center'>" + beca.becas.idBeca + "</ td>"
+                        + "<td class='text-center'>" + beca.becas.nombre + "</ td>"
+                        + "</tr>";
+
+                    $("#tablaEmpleado tbody").append(filas);
+                });
+            },
+            error: function (result) {
+                alert('Error en la consulta.' + result.responseJSON.ErrorMessage); //es un error de JSON, y es porque puede venir vacio o null
+            }
+        });
+    };
+</script>
+
+
